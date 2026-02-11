@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/2.Lesson/">
+    <Project Path="NetworkProgramming.Client/NetworkProgramming.SimpleClient.csproj" />
+    <Project Path="NetworkProgramming.SimpleServer/NetworkProgramming.SimpleServer.csproj" />
+  </Folder>
+</Solution>
