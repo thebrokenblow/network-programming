@@ -3,4 +3,9 @@
     <Project Path="NetworkProgramming.SimpleClient/NetworkProgramming.SimpleClient.csproj" />
     <Project Path="NetworkProgramming.SimpleServer/NetworkProgramming.SimpleServer.csproj" />
   </Folder>
+  <Folder Name="/3.Lesson/">
+    <Project Path="Client/Client.csproj" Id="7287b10a-b169-4648-9518-4fcbe34ec21b" />
+    <Project Path="Core/Core.csproj" Id="4c3302c9-2695-4464-b57b-821615fe4eae" />
+    <Project Path="Server/Server.csproj" Id="70a945f9-52c1-4eb3-b1f5-d26d68b727d6" />
+  </Folder>
 </Solution>

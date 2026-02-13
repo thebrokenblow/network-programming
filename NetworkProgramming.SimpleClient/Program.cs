@@ -1,24 +1,26 @@
-﻿using System.Net;
+﻿using System.Net.Sockets;
+using System.Text;
 
 namespace NetworkProgramming.SimpleClient;
 
 public class Program
 {
-    private const int Port = 8888;
-    private readonly static byte[] arrayIPAddress = [127, 0, 0, 1];
-
     public static async Task Main()
     {
-        var ipAddress = new IPAddress(arrayIPAddress);
-        var ipEndPoint = new IPEndPoint(ipAddress, Port);
-
-        var client = new Client(ipEndPoint);
         Console.WriteLine("Клиент запущен");
 
         while (true)
         {
-            var value = Console.ReadLine();
-            await client.SendAsync(value);
+            using var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            await clientSocket.ConnectAsync("127.0.0.1", 8888);
+
+            var message = Console.ReadLine();
+
+            var messageBytes = Encoding.UTF8.GetBytes(message);
+            await clientSocket.SendAsync(messageBytes);
+
+            clientSocket.Shutdown(SocketShutdown.Both);
+            await clientSocket.DisconnectAsync(reuseSocket: true);
         }
     }
 }
