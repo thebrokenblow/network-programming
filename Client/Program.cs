@@ -1,5 +1,6 @@
 ﻿using Core;
 using System.Net;
+
 namespace Client;
 
 public class Program
@@ -11,11 +12,9 @@ public class Program
     {
         Console.WriteLine("Клиент запущен");
 
-        //Сериалоизация и десериализация
-
         var ipAddress = new IPAddress(arrayIpAddress);
         var ipEndPoint = new IPEndPoint(ipAddress, port);
-        var simpleClient = new SimpleClient(ipEndPoint);
+        var simpleClient = new ProductService(ipEndPoint);
 
         while (true)
         {
@@ -23,14 +22,68 @@ public class Program
 
             if (string.IsNullOrEmpty(message))
             {
-                continue; 
+                continue;
             }
 
-            var products = await simpleClient.SendAsync<List<Product>>(message);
-
-            foreach (var product in products)
+            if (message == "1")
             {
-                Console.WriteLine(product);
+                var products = await simpleClient.GetAllAsync();
+
+                foreach (var product in products)
+                {
+                    Console.WriteLine(product);
+                }
+            }
+            else if (message == "2")
+            {
+                Console.WriteLine("Введите наименование товара");
+                var name = Console.ReadLine();
+
+                Console.WriteLine("Введите Описание товара");
+                var description = Console.ReadLine();
+
+                Console.WriteLine("Введите цену товара");
+                var price = decimal.Parse(Console.ReadLine());
+
+                var product = new Product
+                {
+                    Name = name,
+                    Description = description,
+                    Price = price
+                };
+
+                await simpleClient.CreateAsync(product);
+            }
+            else if (message == "3")
+            {
+                Console.WriteLine("Введите номер товара");
+                var id = int.Parse(Console.ReadLine());
+
+                Console.WriteLine("Введите наименование товара");
+                var name = Console.ReadLine();
+
+                Console.WriteLine("Введите Описание товара");
+                var description = Console.ReadLine();
+
+                Console.WriteLine("Введите цену товара");
+                var price = decimal.Parse(Console.ReadLine());
+
+                var product = new Product
+                {
+                    Id = id,
+                    Name = name,
+                    Description = description,
+                    Price = price
+                };
+
+                await simpleClient.UpdateAsync(product);
+            }
+            else if (message == "4")
+            {
+                Console.WriteLine("Введите номер товара");
+                var id = int.Parse(Console.ReadLine());
+
+                await simpleClient.DeleteAsync(id);
             }
         }
     }
