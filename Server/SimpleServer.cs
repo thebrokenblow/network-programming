@@ -1,5 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure;
+using Core.Enums;
+using Core.Model;
+using Core.Reponces;
+using Core.Requests;
+using Microsoft.EntityFrameworkCore;
 using Server.Data;
+using Server.Repositories;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -16,7 +22,6 @@ public class SimpleServer : IDisposable
     private readonly int _sizeBuffer;
 
     private readonly Socket _serverSocket;
-    private readonly ApplicationContext applicationContext = new();
 
     public SimpleServer(IPEndPoint ipEndPoint, int backlog)
     {
@@ -51,14 +56,7 @@ public class SimpleServer : IDisposable
             while (true)
             {
                 clientSocket = await _serverSocket.AcceptAsync();
-                var request = await HandlerReceiveAsync(clientSocket);
-
-                if (request.ToLower() == "get data")
-                {
-                    var products = await applicationContext.Products.ToListAsync();
-                    var serializeProducts = JsonSerializer.Serialize(products);
-                    await HandlerSendAsync(clientSocket, serializeProducts);
-                }
+                _ = Task.Run(async () => await HandleRequestAsync(clientSocket));
             }
 
         }
@@ -72,7 +70,78 @@ public class SimpleServer : IDisposable
         }
     }
 
-    private async Task<string> HandlerReceiveAsync(Socket clientSocket)
+    private async Task HandleRequestAsync(Socket clientSocket)
+    {
+        var context = new ApplicationContext();
+        var productRepository = new ProductRepository(context);
+
+        var requestDto = await HandlerReceiveAsync(clientSocket);
+
+        if (requestDto.TypeCommand == TypeCommands.Read)
+        {
+            await HandleGetAllAsync(clientSocket, productRepository, requestDto.Body);
+        }
+        else if (requestDto.TypeCommand == TypeCommands.Create)
+        {
+            await HandleCreateAsync(clientSocket, productRepository, requestDto.Body);
+        }
+        else if (requestDto.TypeCommand == TypeCommands.Update)
+        {
+            await HandleUpdateAsync(productRepository, requestDto.Body);
+        }
+        else if (requestDto.TypeCommand == TypeCommands.Delete)
+        {
+            await HandleDeleteAsync(productRepository, requestDto.Body);
+        }
+    }
+
+    private static async Task HandleGetAllAsync(Socket clientSocket, ProductRepository productRepository, string requestBody)
+    {
+        var products = await productRepository.GetAllAsync();
+        var responce = JsonSerializer.Serialize(products);
+
+        await HandlerSendAsync(clientSocket, responce);
+    }
+
+    private static async Task HandleCreateAsync(Socket clientSocket, ProductRepository productRepository, string requestBody)
+    {
+        var reponceDto = new ReponceDto
+        {
+            TypeResponce = TypeResponces.OK,
+            Error = string.Empty,
+        };
+
+        try
+        {
+            var product = JsonSerializer.Deserialize<Product>(requestBody);
+            await productRepository.CreateAsync(product);
+        }
+        catch (Exception ex)
+        {
+            reponceDto = new ReponceDto
+            {
+                TypeResponce = TypeResponces.Error,
+                Error = ex.ToString(),
+            };
+        }
+
+        var reponce = JsonSerializer.Serialize(reponceDto);
+        await HandlerSendAsync(clientSocket, reponce);
+    }
+
+    private static async Task HandleUpdateAsync(ProductRepository productRepository, string requestBody)
+    {
+        var product = JsonSerializer.Deserialize<Product>(requestBody);
+        await productRepository.UpdateAsync(product);
+    }
+
+    private static async Task HandleDeleteAsync(ProductRepository productRepository, string requestBody)
+    {
+        var id = JsonSerializer.Deserialize<int>(requestBody);
+        await productRepository.DeleteAsync(id);
+    }
+
+    private async Task<RequestDto> HandlerReceiveAsync(Socket clientSocket)
     {
         int readBytes;
         var buffer = new byte[_sizeBuffer];
@@ -80,13 +149,16 @@ public class SimpleServer : IDisposable
         do
         {
             readBytes = await clientSocket.ReceiveAsync(buffer);
-            var request = Encoding.UTF8.GetString(buffer, 0, readBytes);
-            requestBuilder.Append(request);
+            var requestSegment = Encoding.UTF8.GetString(buffer, 0, readBytes);
+            requestBuilder.Append(requestSegment);
         }
         while (readBytes > 0);
-        clientSocket.Shutdown(SocketShutdown.Receive);
 
-        return requestBuilder.ToString();
+        clientSocket.Shutdown(SocketShutdown.Receive);
+        var request = requestBuilder.ToString();
+        var requestDto = JsonSerializer.Deserialize<RequestDto>(request);
+
+        return requestDto;
     }
 
     private static async Task HandlerSendAsync(Socket clientSocket, string message)
