@@ -1,9 +1,12 @@
-﻿using Core;
+﻿using Core.Model;
+using Core.Responces;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
+using Server.Exceptions;
 using Server.Repositories;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 
@@ -77,42 +80,144 @@ public class SimpleServer : IDisposable
         }
         else if (typeCommand == TypeCommand.Create)
         {
-            await HandleCreateAsync(productRepository, bodyRequest);
+            await HandleCreateAsync(clientSocket, productRepository, bodyRequest);
         }
         else if (typeCommand == TypeCommand.Update)
         {
-            await HandleUpdateAsync(productRepository, bodyRequest);
+            await HandleUpdateAsync(clientSocket, productRepository, bodyRequest);
         }
         else if (typeCommand == TypeCommand.Delete)
         {
-            await HandleDeleteAsync(productRepository, bodyRequest);
+            await HandleDeleteAsync(clientSocket, productRepository, bodyRequest);
         }
-    }
-
-    private static async Task HandleDeleteAsync(ProductRepository productRepository, string bodyRequest)
-    {
-        var id = JsonSerializer.Deserialize<int>(bodyRequest);
-        await productRepository.DeleteAsync(id);
-    }
-
-    private static async Task HandleUpdateAsync(ProductRepository productRepository, string bodyRequest)
-    {
-        var product = JsonSerializer.Deserialize<Product>(bodyRequest);
-        await productRepository.UpdateAsync(product);
-    }
-
-    private static async Task HandleCreateAsync(ProductRepository productRepository, string bodyRequest)
-    {
-        var product = JsonSerializer.Deserialize<Product>(bodyRequest);
-        await productRepository.CreateAsync(product);
     }
 
     private static async Task HandleGetAllAsync(Socket clientSocket, ProductRepository productRepository, string bodyRequest)
     {
-        var products = await productRepository.GetAllAsync();
-        var serializeProducts = JsonSerializer.Serialize(products);
+        try
+        {
+            var products = await productRepository.GetAllAsync();
+            var serializeProducts = JsonSerializer.Serialize(products);
 
-        await HandlerSendAsync(clientSocket, serializeProducts);
+            await HandlerSendAsync(clientSocket, serializeProducts);
+        }
+        catch (Exception ex)
+        {
+            var reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.Error,
+                ErrorMessage = ex.Message
+            };
+
+            var reponce = JsonSerializer.Serialize(reponceDto);
+            await HandlerSendAsync(clientSocket, reponce);
+        }
+    }
+
+    private static async Task HandleCreateAsync(Socket clientSocket, ProductRepository productRepository, string bodyRequest)
+    {
+        var reponceDto = new ReponceDto()
+        {
+            StatusReponce = StatusReponce.Ok,
+            ErrorMessage = string.Empty,
+        };
+
+        try
+        {
+            var product = JsonSerializer.Deserialize<Product>(bodyRequest)
+                ?? throw new SerializationException($"{nameof(Product)} error serialization");
+
+            await productRepository.CreateAsync(product);
+        }
+        catch (NotFoundException ex)
+        {
+            reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.NotFound,
+                ErrorMessage = ex.Message
+            };
+        }
+        catch (Exception ex)
+        {
+            reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.Error,
+                ErrorMessage = ex.Message
+            };
+        }
+
+        var reponce = JsonSerializer.Serialize(reponceDto);
+        await HandlerSendAsync(clientSocket, reponce);
+    }
+
+    private static async Task HandleUpdateAsync(Socket clientSocket, ProductRepository productRepository, string bodyRequest)
+    {
+        var reponceDto = new ReponceDto()
+        {
+            StatusReponce = StatusReponce.Ok,
+            ErrorMessage = string.Empty,
+        };
+
+        try
+        {
+            var product = JsonSerializer.Deserialize<Product>(bodyRequest) 
+                ?? throw new SerializationException($"{nameof(Product)} error serialization");
+
+            await productRepository.UpdateAsync(product);
+        }
+        catch (NotFoundException ex)
+        {
+            reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.NotFound,
+                ErrorMessage = ex.Message
+            };
+        }
+        catch (Exception ex)
+        {
+           reponceDto = new ReponceDto()
+           {
+               StatusReponce = StatusReponce.Error,
+               ErrorMessage = ex.Message
+           };
+        }
+
+        var reponce = JsonSerializer.Serialize(reponceDto);
+        await HandlerSendAsync(clientSocket, reponce);
+    }
+
+    private static async Task HandleDeleteAsync(Socket clientSocket, ProductRepository productRepository, string bodyRequest)
+    {
+        var reponceDto = new ReponceDto()
+        {
+            StatusReponce = StatusReponce.Ok,
+            ErrorMessage = string.Empty,
+        };
+
+        try
+        {
+            var id = JsonSerializer.Deserialize<int>(bodyRequest);
+            await productRepository.DeleteAsync(id);
+        }
+        catch (NotFoundException ex)
+        {
+            reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.NotFound,
+                ErrorMessage = ex.Message
+            };
+        }
+        catch (Exception ex)
+        {
+            reponceDto = new ReponceDto()
+            {
+                StatusReponce = StatusReponce.Error,
+                ErrorMessage = ex.Message
+            };
+        }
+
+        var reponce = JsonSerializer.Serialize(reponceDto);
+        await HandlerSendAsync(clientSocket, reponce);
     }
 
     private async Task<(TypeCommand typeCommand, string bodyRequest)> ReadRequestAsync(Socket clientSocket)

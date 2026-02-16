@@ -1,6 +1,7 @@
-﻿using Core;
+﻿using Core.Model;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
+using Server.Exceptions;
 
 namespace Server.Repositories;
 
@@ -31,7 +32,8 @@ public class ProductRepository : IDisposable
 
     public async Task UpdateAsync(Product product)
     {
-        var updatingProduct = await _context.Products.FirstOrDefaultAsync(p => p.Id == product.Id);
+        var updatingProduct = await _context.Products.FirstOrDefaultAsync(p => p.Id == product.Id)
+            ?? throw new NotFoundException($"{nameof(Product)} is not found by id");
 
         updatingProduct.Name = product.Name;
         updatingProduct.Description = product.Description;
@@ -43,7 +45,8 @@ public class ProductRepository : IDisposable
 
     public async Task DeleteAsync(int id)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new NotFoundException($"{nameof(Product)} is not found by id");
 
         _context.Remove(product);
         await _context.SaveChangesAsync();

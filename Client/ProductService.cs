@@ -1,5 +1,6 @@
 ﻿using Client.Common;
-using Core;
+using Core.Model;
+using Core.Responces;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -73,6 +74,9 @@ public class ProductService
 
             await HandlerSendAsync(clientSocket, request);
             clientSocket.Shutdown(SocketShutdown.Send);
+
+            var reponceDto = await HandlerReceiveAsync<ReponceDto>(clientSocket);
+            Console.WriteLine(reponceDto);
         }
         catch (Exception ex)
         {
@@ -96,6 +100,9 @@ public class ProductService
 
             await HandlerSendAsync(clientSocket, request);
             clientSocket.Shutdown(SocketShutdown.Send);
+
+            var reponceDto = await HandlerReceiveAsync<ReponceDto>(clientSocket);
+            Console.WriteLine(reponceDto);
         }
         catch (Exception ex)
         {
@@ -119,6 +126,9 @@ public class ProductService
 
             await HandlerSendAsync(clientSocket, request);
             clientSocket.Shutdown(SocketShutdown.Send);
+
+            var reponceDto = await HandlerReceiveAsync<ReponceDto>(clientSocket);
+            Console.WriteLine(reponceDto);
         }
         catch (Exception ex)
         {

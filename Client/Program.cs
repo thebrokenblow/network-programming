@@ -1,4 +1,4 @@
-﻿using Core;
+﻿using Core.Model;
 using System.Net;
 
 namespace Client;
