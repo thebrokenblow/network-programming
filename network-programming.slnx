@@ -8,4 +8,8 @@
     <Project Path="Core/Core.csproj" Id="4c3302c9-2695-4464-b57b-821615fe4eae" />
     <Project Path="Server/Server.csproj" Id="70a945f9-52c1-4eb3-b1f5-d26d68b727d6" />
   </Folder>
+  <Folder Name="/4.Lesson/">
+    <Project Path="UDPClient/UDPClient.csproj" Id="7be310e7-b2dd-4344-9867-e3ab98862b0e" />
+    <Project Path="UDPServer/UDPServer.csproj" Id="97c73166-1f18-4e23-9dab-cada4b6a2215" />
+  </Folder>
 </Solution>
