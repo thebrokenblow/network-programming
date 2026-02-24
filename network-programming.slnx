@@ -12,4 +12,11 @@
     <Project Path="UDPClient/UDPClient.csproj" Id="7be310e7-b2dd-4344-9867-e3ab98862b0e" />
     <Project Path="UDPServer/UDPServer.csproj" Id="97c73166-1f18-4e23-9dab-cada4b6a2215" />
   </Folder>
+  <Folder Name="/5.Lesson/">
+    <Project Path="../Server/Server.csproj" />
+    <Project Path="HttpAppClient/HttpAppClient.csproj" Id="28d75f68-08fc-4ab3-bdcb-83ebf6d6963a" />
+  </Folder>
+  <Folder Name="/Homework/">
+    <Project Path="../ConsoleApp2/Server/HomeworkServer.csproj" />
+  </Folder>
 </Solution>
