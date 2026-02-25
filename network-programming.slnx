@@ -16,6 +16,9 @@
     <Project Path="../Server/Server.csproj" />
     <Project Path="HttpAppClient/HttpAppClient.csproj" Id="28d75f68-08fc-4ab3-bdcb-83ebf6d6963a" />
   </Folder>
+  <Folder Name="/6.Lesson/">
+    <Project Path="HttpServer/HttpServer.csproj" Id="dad2a9a6-cb7d-4acd-b3a7-0e27f482a62f" />
+  </Folder>
   <Folder Name="/Homework/">
     <Project Path="../ConsoleApp2/Server/HomeworkServer.csproj" />
   </Folder>
